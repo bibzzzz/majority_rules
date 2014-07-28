@@ -8,47 +8,127 @@ import os.path
 import csv
 import numpy
 
-usernames = ("Amy","Habib")
+usernames = ["Kai","Habib","Amy","Nathan","Hanna","Rando"]
+n_players = len(usernames)
+
 print("Creating game for: {}".format(usernames))
-initial_search_term = 'cool tricks for'
 
-answer_selections = [6,2]
-
-#save_path = '/Users/amydonaldson/Desktop/majority_rules/'
-#game_history_filename = os.path.join(save_path, "game_history.txt")
-#point_totals_filename = os.path.join(save_path, "game_totals.txt")
+game_dir = '/Users/amydonaldson/Desktop/majority_rules/'
+game_history_filename = os.path.join(game_dir, "game_history.txt")
+point_totals_filename = os.path.join(game_dir, "game_totals.txt")
+player_list_filename = os.path.join(game_dir, "player_list.txt")
+q_player_filename = os.path.join(game_dir, "q_player_file.txt")
+a_players_filename = os.path.join(game_dir, "a_players_file.txt")
 
 #?output config settings: player_list file, base_url
-#game_history_filename = 'game_history'
-#game_history_completeName = os.path.join(save_path, game_history_filename+".txt")
 
-#game_history_file = open(game_history_completeName, "w+")
-#point_totals_file = open(point_totals_filename, "w+")
 
-#game_history_file.close()
-#point_totals_file.close()
+game_history_file = open(game_history_filename, "w+")
+point_totals_file = open(point_totals_filename, "w+")
+player_list_file = open(player_list_filename, "w+")
+q_player_file = open(q_player_filename, "w+")
+a_players_file = open(a_players_filename, "w+")
 
-def search_term_execute(usernames,initial_search_term):
+game_history_file.close()
+
+for item in usernames:
+    entry = "%s,0\n" % item
+    point_totals_file.writelines(entry)
+
+point_totals_file.close()
+
+#set first player to initial question master
+
+q_player = usernames[0]
+a_players = usernames[1:]
+
+for item in usernames:
+    entry = "%s\n" % item
+    player_list_file.writelines(entry)
+
+for item in q_player:
+    entry = "%s" % item
+    q_player_file.writelines(entry)
+
+for item in a_players:
+    entry = "%s\n" % item
+    a_players_file.writelines(entry)
+
+player_list_file.close()
+q_player_file.close()
+a_players_file.close()
+
+print("%s, please pose a search term:" %q_player)
+
+def play_next_round():
+
+    game_dir = '/Users/amydonaldson/Desktop/majority_rules/'
+
+    player_list_filename = os.path.join(game_dir, "player_list.txt")
+    q_player_filename = os.path.join(game_dir, "q_player_file.txt")
+    a_players_filename = os.path.join(game_dir, "a_players_file.txt")
+
+    datafile = open(player_list_filename, 'r+')
+    datareader = csv.reader(datafile)
+    player_list = list(datareader)
+
+    datafile = open(q_player_filename, 'r+')
+    datareader = csv.reader(datafile)
+    q_player = list(datareader)
+
+    n_players = len(player_list)
+
+    q_index = []
     
-    save_path = '/Users/amydonaldson/Desktop/majority_rules/'
+    for x in enumerate(player_list):
+        if x[1][0]==q_player[0][0]:
+            q_index.append(x[0])
+            if (q_index[0] + 1) >= n_players:
+                q_index = 0
+            else:
+                q_index = q_index[0] + 1
+                
+ 
+    a_players = player_list[0:q_index] + player_list[(q_index+1):n_players]
+    q_player = player_list[q_index]
+
+    print("%s, please pose a search term:" % q_player[0])
+
+    a_players_file = open(a_players_filename, "w")
+    q_player_file = open(q_player_filename, "w")
+
+    for item in a_players:
+        text_entry = "%s\n"
+        line_entry = text_entry % tuple(item)
+        a_players_file.writelines(line_entry)
+    a_players_file.close()
+
+    for item in q_player:
+      q_player_file.writelines("%s" % item)
+    q_player_file.close()
+    
+
+def search_term_execute(search_term):
+
+    global current_search_term 
+    current_search_term = search_term
+    
+    game_dir = '/Users/amydonaldson/Desktop/majority_rules/'
     base_url = 'http://google.com/complete/search?output=toolbar&q='
 
     n_players = len(usernames)
 
-    #create history files on game setup
-    game_history_filename = os.path.join(save_path, "game_history.txt")
-    point_totals_filename = os.path.join(save_path, "game_totals.txt")
+    q_player_filename = os.path.join(game_dir, "q_player_file.txt")
+    a_players_filename = os.path.join(game_dir, "a_players_file.txt")
 
-    #?output config settings: player_list file, base_url
-    game_history_filename = 'game_history'
-    game_history_completeName = os.path.join(save_path, game_history_filename+".txt")
+    datafile = open(a_players_filename, 'r')
+    datareader = csv.reader(datafile)
+    a_players_list = list(datareader)
 
-    game_history_file = open(game_history_completeName, "w+")
-    point_totals_file = open(point_totals_filename, "w+")
+    datafile = open(q_player_filename, 'r')
+    datareader = csv.reader(datafile)
+    q_player = list(datareader)[0][0]
     
-    game_history_file.close()
-    point_totals_file.close()
-
     #USER: request search term for round
 
     ##execute search_engine to generate search term results
@@ -56,7 +136,7 @@ def search_term_execute(usernames,initial_search_term):
     #read in config settings
     
     #adjust search_term
-    adj_search_term = initial_search_term.replace (" ", "+")
+    adj_search_term = search_term.replace (" ", "+")
     #create search_term_url
     search_term_url = base_url + adj_search_term
 
@@ -67,58 +147,66 @@ def search_term_execute(usernames,initial_search_term):
 
     suggestion_list = xmldoc.getElementsByTagName('CompleteSuggestion') 
     n_suggestions = len(suggestion_list)
-    pts_list = list(reversed(range(n_suggestions)))
 
-    suggestion_tree = xml.etree.ElementTree.fromstring(xml_string)
+    if n_suggestions >= n_players:
+        pts_list = list(reversed(range(n_suggestions)))
 
-    ordered_suggestion_list = list()
+        suggestion_tree = xml.etree.ElementTree.fromstring(xml_string)
 
-    for data in suggestion_tree.iter('suggestion'):
-            suggestion = data.get('data')
-            ordered_suggestion_list.append(suggestion)
+        ordered_suggestion_list = list()
 
-    pts_ordered_suggestion_list = list(zip(ordered_suggestion_list, pts_list))
+        for data in suggestion_tree.iter('suggestion'):
+                suggestion = data.get('data')
+                ordered_suggestion_list.append(suggestion)
 
-    random_suggestion_list = sorted(ordered_suggestion_list, key=lambda k: random.random())
+        pts_ordered_suggestion_list = list(zip(ordered_suggestion_list, pts_list))
 
-    save_path = '/Users/amydonaldson/Desktop/majority_rules/'
-    random_list_filename = 'random_list'
-    pts_ordered_list_filename = 'pts_ordered_list'
-    random_list_completeName = os.path.join(save_path, random_list_filename+".txt")
-    pts_ordered_list_completeName = os.path.join(save_path, pts_ordered_list_filename+".txt")
-    random_list_file = open(random_list_completeName, "w")
-    pts_ordered_list_file = open(pts_ordered_list_completeName, "w")
+        random_suggestion_list = sorted(ordered_suggestion_list, key=lambda k: random.random())
 
-    #output: user_suggestions - randomized order index and autocomplete suggestions
+        game_dir = '/Users/amydonaldson/Desktop/majority_rules/'
+        random_list_filename = 'random_list'
+        pts_ordered_list_filename = 'pts_ordered_list'
+        random_list_completeName = os.path.join(game_dir, random_list_filename+".txt")
+        pts_ordered_list_completeName = os.path.join(game_dir, pts_ordered_list_filename+".txt")
+        random_list_file = open(random_list_completeName, "w")
+        pts_ordered_list_file = open(pts_ordered_list_completeName, "w")
 
-    for item in random_suggestion_list:
-      random_list_file.write("%s\n" % item)
-    random_list_file.close()
+        #output: user_suggestions - randomized order index and autocomplete suggestions
 
-    #output: round_answers - containing answers, the randomized order index, and associated points
+        for item in random_suggestion_list:
+          random_list_file.write("%s\n" % item)
+        random_list_file.close()
 
-    for item in pts_ordered_suggestion_list:
-      pts_ordered_list_file.writelines("%s,%d\n" % item)
-    pts_ordered_list_file.close()
+        #output: round_answers - containing answers, the randomized order index, and associated points
 
-    #feed options to user
-    #print(random_suggestion_list)
-    return(random_suggestion_list)
+        for item in pts_ordered_suggestion_list:
+          pts_ordered_list_file.writelines("%s,%d\n" % item)
+        pts_ordered_list_file.close()
+
+        #feed options to user
+        #print(random_suggestion_list)
+        print(a_players_list,"select answers from the following:")
+        return(random_suggestion_list)
+
+    else:
+        print("Not enough autocomplete suggestions, please suggest another search term.")
+        print("%s, please pose a search term:" % q_player)
+
 
 #USER: submit answer selections
 
     
 def answer_submit(answer_selections):
 
-    load_path = '/Users/amydonaldson/Desktop/majority_rules/'
-    save_path = '/Users/amydonaldson/Desktop/majority_rules/'
+    game_dir = '/Users/amydonaldson/Desktop/majority_rules/'
 
-    answer_table_filename = os.path.join(load_path, "pts_ordered_list.txt")
-    game_history_filename = os.path.join(load_path, "game_history.txt")
-    point_totals_filename = os.path.join(load_path, "game_totals.txt")
-    random_suggestion_filename = os.path.join(load_path, "random_list.txt")
-    round_scores_filename = os.path.join(load_path, "round_score.txt")
-
+    answer_table_filename = os.path.join(game_dir, "pts_ordered_list.txt")
+    game_history_filename = os.path.join(game_dir, "game_history.txt")
+    point_totals_filename = os.path.join(game_dir, "game_totals.txt")
+    random_suggestion_filename = os.path.join(game_dir, "random_list.txt")
+    round_scores_filename = os.path.join(game_dir, "round_score.txt")
+    a_players_filename = os.path.join(game_dir, "a_players_file.txt")
+    q_player_filename = os.path.join(game_dir, "q_player_file.txt")
 
     datafile = open(answer_table_filename, 'r')
     datareader = csv.reader(datafile)
@@ -136,16 +224,33 @@ def answer_submit(answer_selections):
     datareader = csv.reader(datafile)
     random_suggestion_list = list(datareader)
 
+    datafile = open(a_players_filename, 'r')
+    datareader = csv.reader(datafile)
+    a_players_list = list(datareader)
+    
+    datafile = open(q_player_filename, 'r')
+    datareader = csv.reader(datafile)
+    q_player = list(datareader)[0][0]
+    
+    for item in point_totals:
+        if item[0] == q_player:
+            q_player_score = float(item[1])
+
     #concatenate usernames and answer_selections
 
-    player_answers = {"Amy":random_suggestion_list[answer_selections[0]],
-                      "Habib":random_suggestion_list[answer_selections[1]]}
+    player_answers = {}
+    i = 0
+
+    for player in a_players_list:
+        x = (player[0],random_suggestion_list[answer_selections[i]])
+        player_answers[x[0]]=x[1]
+        i = i + 1
 
     user_scores = list()
     total_score_table = list()
 
-    for user in usernames:
-        user_answer = player_answers[user]
+    for user in a_players_list:
+        user_answer = player_answers[user[0]]
         #print(user_answer)
         for answer in answer_table:
             if user_answer[0] == answer[0]:
@@ -154,16 +259,18 @@ def answer_submit(answer_selections):
                     user_total_points = user_points
                 else:
                     for entry in point_totals:
-                        if entry[0] == user:
+                        if entry[0] == user[0]:
                             user_total_points = float(entry[1]) + user_points
                     
-        user_score_entry = (user, initial_search_term, user_answer[0], user_points)
+        user_score_entry = (user[0], current_search_term, user_answer[0], user_points)
         user_scores.append(user_score_entry)
-        total_score_entry = (user, user_total_points)
+        total_score_entry = (user[0], user_total_points)
         #convert user_score_entry to array before appending
         game_history_table.append(list(user_score_entry))
         total_score_table.append(total_score_entry)
 
+    total_score_table.append((q_player,q_player_score))
+    
     round_scores_file = open(round_scores_filename, "w")
     game_history_file = open(game_history_filename, "r+")
     point_totals_file = open(point_totals_filename, "r+")
@@ -182,6 +289,8 @@ def answer_submit(answer_selections):
       point_totals_file.writelines("%s,%d\n" % item)
     point_totals_file.close()
 
+    print(user_scores)
+    print(total_score_table)
 
 #merge player_answers with round_answers table
 #update game_totals file.
