@@ -12,7 +12,7 @@ import uuid
   
 game_id = str(uuid.uuid4())
 
-game_dir = '/Users/habibadam/Desktop/majority_rules/' + game_id
+game_dir = 'C:\\Users\\habib.adam\\Documents\\dev\\majority_rules\\' + game_id
 
 if not os.path.exists(game_dir):
                 os.makedirs(game_dir)
